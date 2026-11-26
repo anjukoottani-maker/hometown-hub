@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hometown Hub — Digital Community Platform</title>
+  <style>
+    /* Clean, Modern, Mobile-First CSS */
+    :root {
+      --primary: #059669;
+      --primary-dark: #047857;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    
+    /* Navbar */
+    header {
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 14px 24px; display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .logo { font-size: 20px; font-weight: 700; color: var(--primary); cursor: pointer; }
+    .nav-links button { margin-left: 10px; }
+
+    /* Layout & Cards */
+    .container { max-width: 960px; margin: 24px auto; padding: 0 16px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .kpi-box { background: #ecfdf5; border: 1px solid #a7f3d0; padding: 16px; border-radius: 10px; text-align: center; }
+    .kpi-box h2 { margin: 4px 0 0; color: var(--primary-dark); }
+
+    /* Forms & Buttons */
+    input, textarea, select {
+      width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 14px;
+    }
+    button {
+      background: var(--primary); color: white; border: none; padding: 10px 16px;
+      border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;
+    }
+    button:hover { background: var(--primary-dark); }
+    button.secondary { background: #e2e8f0; color: var(--text); }
+    button.danger { background: #dc2626; }
+    button.small { padding: 6px 10px; font-size: 12px; }
+
+    /* Badges & Helpers */
+    .badge {
+      display: inline-block; background: #d1fae5; color: #065f46; padding: 3px 10px;
+      border-radius: 20px; font-size: 12px; font-weight: 600;
+    }
+    .pinned { border-left: 4px solid var(--primary); background: #f8fafc; }
+    .hidden { display: none !important; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .comment-box { background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVIGATION -->
+  <header>
+    <div class="logo" onclick="showView('homeView')">📍 Hometown Hub</div>
+    <div id="navLoggedOut" class="nav-links">
+      <button class="secondary" onclick="showView('loginView')">Login</button>
+      <button onclick="showView('registerView')">Register</button>
+    </div>
+    <div id="navLoggedIn" class="nav-links hidden">
+      <span id="userGreeting" style="font-size: 14px; font-weight: 600;"></span>
+      <button id="adminNavBtn" class="secondary hidden" onclick="loadAdmin()">🛡️ Admin Panel</button>
+      <button class="secondary" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- 1. LOGIN VIEW -->
+    <div id="loginView" class="card hidden" style="max-width: 420px; margin: 40px auto;">
+      <h2>Welcome Back</h2>
+      <form onsubmit="handleLogin(event)">
+        <input type="email" id="loginEmail" placeholder="Email Address" required />
+        <input type="password" id="loginPassword" placeholder="Password" required />
+        <button type="submit" style="width: 100%;">Log In</button>
+      </form>
+      <p style="font-size: 13px; text-align: center;">
+        Don't have an account? <a href="#" onclick="showView('registerView')">Register here</a>
+      </p>
+    </div>
+
+    <!-- 2. REGISTER VIEW -->
+    <div id="registerView" class="card hidden" style="max-width: 420px; margin: 40px auto;">
+      <h2>Create Hometown Account</h2>
+      <p style="font-size: 12px; color: var(--muted);">Tip: The first registered user becomes the Platform Admin.</p>
+      <form onsubmit="handleRegister(event)">
+        <input type="text" id="regName" placeholder="Full Name" required />
+        <input type="email" id="regEmail" placeholder="Email Address" required />
+        <input type="password" id="regPassword" placeholder="Password" required />
+        <input type="text" id="regHometown" placeholder="Hometown / Native Village (e.g., Thrissur)" required />
+        <input type="text" id="regCurrentCity" placeholder="Current City (e.g., Bengaluru)" required />
+        <button type="submit" style="width: 100%;">Create Account</button>
+      </form>
+    </div>
+
+    <!-- 3. HOME / COMMUNITY DIRECTORY VIEW -->
+    <div id="homeView">
+      <div class="card" style="background: #065f46; color: white;">
+        <h1 style="margin: 0 0 8px;">Connect With Your Hometown Roots</h1>
+        <p style="margin: 0 0 16px; opacity: 0.9; font-size: 14px;">
+          Discover local updates, cultural events, and neighbors from your native city or village.
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="searchInput" onkeyup="loadCommunities()" placeholder="Search by city, village, or community..." style="flex: 1; margin: 0;" />
+          <button id="openCreateCommBtn" class="hidden" style="background: #f59e0b; color: #1e293b;" onclick="toggleCreateComm()">+ Create Community</button>
+        </div>
+      </div>
+
+      <!-- Community Onboarding Form -->
+      <div id="createCommForm" class="card hidden">
+        <h3>Community Onboarding Request</h3>
+        <form onsubmit="handleCreateCommunity(event)">
+          <input type="text" id="commName" placeholder="Community Name (e.g., Thrissur Cultural Hub)" required />
+          <input type="text" id="commCity" placeholder="City / Village Name" required />
+          <textarea id="commDesc" placeholder="Describe your community..." rows="3" required></textarea>
+          <button type="submit">Submit Community</button>
+          <button type="button" class="secondary" onclick="toggleCreateComm()">Cancel</button>
+        </form>
+      </div>
+
+      <h3>Approved Communities</h3>
+      <div id="communityList" class="grid"></div>
+    </div>
+
+    <!-- 4. SINGLE COMMUNITY FEED, EVENTS & MODERATION VIEW -->
+    <div id="communityDetailView" class="hidden">
+      <button class="secondary small" onclick="showView('homeView')" style="margin-bottom: 12px;">← Back to Communities</button>
+      
+      <div class="card flex-between">
+        <div>
+          <span id="detailCity" class="badge"></span>
+          <h2 id="detailName" style="margin: 6px 0;"></h2>
+          <p id="detailDesc" style="margin: 0; color: var(--muted); font-size: 14px;"></p>
+        </div>
+        <div id="membershipActionArea"></div>
+      </div>
+
+      <div class="tabs">
+        <button class="secondary small" onclick="switchTab('feedTab')">📰 Community Feed</button>
+        <button class="secondary small" onclick="switchTab('eventsTab')">📅 Local Events</button>
+        <button class="secondary small" onclick="switchTab('membersTab')">👥 Members & Rules</button>
+      </div>
+
+      <!-- TAB A: FEED -->
+      <div id="feedTab">
+        <div id="newPostBox" class="card hidden">
+          <h4>Share an Update or Announcement</h4>
+          <form onsubmit="handleCreatePost(event)">
+            <select id="postCategory">
+              <option value="GENERAL">General Discussion</option>
+              <option value="ANNOUNCEMENT">Announcement</option>
+              <option value="CULTURE">Culture & Traditions</option>
+              <option value="NEWS">Local News</option>
+            </select>
+            <textarea id="postContent" placeholder="Write something for your hometown community..." rows="3" required></textarea>
+            <input type="url" id="postImage" placeholder="Optional Image URL (https://...)" />
+            <button type="submit">Publish Post</button>
+          </form>
+        </div>
+        <div id="postsList"></div>
+      </div>
+
+      <!-- TAB B: EVENTS -->
+      <div id="eventsTab" class="hidden">
+        <div id="newEventBox" class="card hidden">
+          <h4>Organize a Local Event</h4>
+          <form onsubmit="handleCreateEvent(event)">
+            <input type="text" id="evTitle" placeholder="Event Title" required />
+            <input type="date" id="evDate" required />
+            <input type="text" id="evLocation" placeholder="Venue / Location" required />
+            <textarea id="evDesc" placeholder="Event Details..." rows="2"></textarea>
+            <button type="submit">Create Event</button>
+          </form>
+        </div>
+        <div id="eventsList"></div>
+      </div>
+
+      <!-- TAB C: MEMBERS & MODERATION -->
+      <div id="membersTab" class="hidden">
+        <div class="card">
+          <h4>Community Guidelines</h4>
+          <p id="detailRules" style="font-size: 14px; color: var(--muted);"></p>
+        </div>
+        <div class="card">
+          <h4>Community Members</h4>
+          <div id="membersList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. PLATFORM ADMIN DASHBOARD VIEW -->
+    <div id="adminView" class="hidden">
+      <button class="secondary small" onclick="showView('homeView')" style="margin-bottom: 12px;">← Back to Home</button>
+      <h2>🛡️ Platform Admin Dashboard</h2>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-box"><small>Total Users</small><h2 id="kpiUsers">0</h2></div>
+        <div class="kpi-box"><small>Communities</small><h2 id="kpiComms">0</h2></div>
+        <div class="kpi-box"><small>Total Posts</small><h2 id="kpiPosts">0</h2></div>
+        <div class="kpi-box"><small>Total Events</small><h2 id="kpiEvents">0</h2></div>
+      </div>
+
+      <div class="card">
+        <h3>Pending Community Onboarding Requests</h3>
+        <div id="pendingCommsList"></div>
+      </div>
+
+      <div class="card">
+        <h3>Abuse & Content Reports</h3>
+        <div id="reportsList"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================
+       FRONTEND JAVASCRIPT LOGIC
+  ========================================== -->
+  <script>
+    let currentUser = JSON.parse(localStorage.getItem('hh_user') || 'null');
+    let token = localStorage.getItem('hh_token') || '';
+    let activeCommunityId = null;
+
+    // Initialize App
+    updateNavbar();
+    loadCommunities();
+
+    function showView(viewId) {
+      ['loginView', 'registerView', 'homeView', 'communityDetailView', 'adminView'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(viewId).classList.remove('hidden');
+    }
+
+    function updateNavbar() {
+      if (currentUser) {
+        document.getElementById('navLoggedOut').classList.add('hidden');
+        document.getElementById('navLoggedIn').classList.remove('hidden');
+        document.getElementById('openCreateCommBtn').classList.remove('hidden');
+        document.getElementById('userGreeting').innerText = `Hi, ${currentUser.name} (${currentUser.hometown})`;
+        if (currentUser.role === 'PLATFORM_ADMIN') {
+          document.getElementById('adminNavBtn').classList.remove('hidden');
+        }
+      } else {
+        document.getElementById('navLoggedOut').classList.remove('hidden');
+        document.getElementById('navLoggedIn').classList.add('hidden');
+        document.getElementById('openCreateCommBtn').classList.add('hidden');
+      }
+    }
+
+    // AUTHENTICATION
+    async function handleRegister(e) {
+      e.preventDefault();
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: document.getElementById('regName').value,
+          email: document.getElementById('regEmail').value,
+          password: document.getElementById('regPassword').value,
+          hometown: document.getElementById('regHometown').value,
+          current_city: document.getElementById('regCurrentCity').value
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) return alert(data.error);
+      saveSession(data);
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('loginEmail').value,
+          password: document.getElementById('loginPassword').value
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) return alert(data.error);
+      saveSession(data);
+    }
+
+    function saveSession(data) {
+      token = data.token;
+      currentUser = data.user;
+      localStorage.setItem('hh_token', token);
+      localStorage.setItem('hh_user', JSON.stringify(currentUser));
+      updateNavbar();
+      showView('homeView');
+      loadCommunities();
+    }
+
+    function logout() {
+      localStorage.clear();
+      token = '';
+      currentUser = null;
+      updateNavbar();
+      showView('homeView');
+    }
+
+    // COMMUNITIES
+    function toggleCreateComm() {
+      document.getElementById('createCommForm').classList.toggle('hidden');
+    }
+
+    async function loadCommunities() {
+      const q = document.getElementById('searchInput').value;
+      const res = await fetch(`/api/communities?q=${encodeURIComponent(q)}`);
+      const list = await res.json();
+      const container = document.getElementById('communityList');
+      
+      if (list.length === 0) {
+        container.innerHTML = '<p>No communities found. Create one for your hometown!</p>';
+        return;
+      }
+
+      container.innerHTML = list.map(c => `
+        <div class="card">
+          <span class="badge">${c.city_village}</span>
+          <h3 style="margin: 8px 0;">${c.name}</h3>
+          <p style="font-size: 13px; color: var(--muted);">${c.description}</p>
+          <div class="flex-between" style="margin-top: 14px;">
+            <small>👥 ${c.member_count} Members</small>
+            <button class="small" onclick="openCommunity(${c.id})">Open Hub →</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function handleCreateCommunity(e) {
+      e.preventDefault();
+      const res = await fetch('/api/communities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token },
+        body: JSON.stringify({
+          name: document.getElementById('commName').value,
+          city_village: document.getElementById('commCity').value,
+          description: document.getElementById('commDesc').value
+        })
+      });
+      const data = await res.json();
+      alert(data.message);
+      toggleCreateComm();
+      loadCommunities();
+    }
+
+    // SINGLE COMMUNITY DETAILS
+    async function openCommunity(id) {
+      if (!currentUser) return alert('Please log in to view community details.');
+      activeCommunityId = id;
+      showView('communityDetailView');
+
+      const res = await fetch(`/api/communities/${id}`, { headers: { 'Authorization': token } });
+      const data = await res.json();
+
+      document.getElementById('detailCity').innerText = data.community.city_village;
+      document.getElementById('detailName').innerText = data.community.name;
+      document.getElementById('detailDesc').innerText = data.community.description;
+      document.getElementById('detailRules').innerText = data.community.rules;
+
+      const isApproved = data.myMembership?.status === 'APPROVED' || currentUser.role === 'PLATFORM_ADMIN';
+      const isMod = data.myMembership?.role === 'MODERATOR' || currentUser.role === 'PLATFORM_ADMIN';
+
+      // Membership Status Button
+      const actionArea = document.getElementById('membershipActionArea');
+      if (!data.myMembership) {
+        actionArea.innerHTML = `<button onclick="joinCommunity(${id})">Join Community</button>`;
+      } else if (data.myMembership.status === 'PENDING') {
+        actionArea.innerHTML = `<span class="badge" style="background:#fef3c7; color:#92400e;">Approval Pending</span>`;
+      } else {
+        actionArea.innerHTML = `<span class="badge">✓ ${data.myMembership.role}</span>`;
+      }
+
+      // Show/Hide Post & Event Creation Forms
+      document.getElementById('newPostBox').classList.toggle('hidden', !isApproved);
+      document.getElementById('newEventBox').classList.toggle('hidden', !isApproved);
+
+      // Render Posts
+      document.getElementById('postsList').innerHTML = data.posts.map(p => `
+        <div class="card ${p.is_pinned ? 'pinned' : ''}">
+          <div class="flex-between">
+            <div>
+              <strong>${p.author_name}</strong> <small style="color:var(--muted);">(${p.current_city})</small>
+              <span class="badge" style="margin-left:6px;">${p.category}</span>
+              ${p.is_pinned ? '<span class="badge" style="background:#fef3c7; color:#92400e;">📌 Pinned</span>' : ''}
+            </div>
+            <div>
+              ${isMod ? `<button class="secondary small" onclick="pinPost(${p.id})">📌</button>` : ''}
+              ${isMod || p.author_id === currentUser.id ? `<button class="danger small" onclick="deletePost(${p.id})">🗑️</button>` : ''}
+              <button class="secondary small" onclick="reportPost(${p.id})">🚩</button>
+            </div>
+          </div>
+          <p style="margin: 12px 0;">${p.content}</p>
+          ${p.image_url ? `<img src="${p.image_url}" style="max-width:100%; border-radius:8px; margin-bottom:10px;" />` : ''}
+          <div>
+            <button class="secondary small" onclick="likePost(${p.id})">❤️ ${p.likes} Likes</button>
+          </div>
+          <div class="comment-box">
+            ${p.comments.map(c => `<div><strong>${c.author_name}:</strong> ${c.content}</div>`).join('')}
+            ${isApproved ? `
+              <div style="display:flex; gap:6px; margin-top:8px;">
+                <input type="text" id="comment-${p.id}" placeholder="Write a comment..." style="margin:0; padding:6px;" />
+                <button class="small" onclick="addComment(${p.id})">Reply</button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `).join('') || '<p>No posts yet. Start the conversation!</p>';
+
+      // Render Events
+      document.getElementById('eventsList').innerHTML = data.events.map(ev => `
+        <div class="card flex-between">
+          <div>
+            <h4 style="margin:0;">${ev.title}</h4>
+            <small style="color:var(--primary);">📅 ${ev.event_date} | 📍 ${ev.location}</small>
+            <p style="font-size:13px; margin:6px 0;">${ev.description}</p>
+            <small>👥 ${ev.attendees} Attending</small>
+          </div>
+          ${isApproved ? `<button class="small" onclick="rsvpEvent(${ev.id})">RSVP Going</button>` : ''}
+        </div>
+      `).join('') || '<p>No upcoming events.</p>';
+
+      // Render Members
+      document.getElementById('membersList').innerHTML = data.members.map(m => `
+        <div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--border);">
+          <div>
+            <strong>${m.name}</strong> (${m.role}) — <small>Roots: ${m.hometown} | Lives in: ${m.current_city}</small>
+          </div>
+          <div>
+            ${m.status === 'PENDING' && isMod 
+              ? `<button class="small" onclick="approveMember(${m.id})">Approve Request</button>` 
+              : `<span class="badge">${m.status}</span>`}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function switchTab(tabId) {
+      ['feedTab', 'eventsTab', 'membersTab'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+    }
+
+    async function joinCommunity(id) {
+      const res = await fetch(`/api/communities/${id}/join`, { method: 'POST', headers: { 'Authorization': token } });
+      const data = await res.json();
+      alert(data.message);
+      openCommunity(id);
+    }
+
+    async function approveMember(membershipId) {
+      await fetch(`/api/memberships/${membershipId}/approve`, { method: 'POST', headers: { 'Authorization': token } });
+      openCommunity(activeCommunityId);
+    }
+
+    async function handleCreatePost(e) {
+      e.preventDefault();
+      await fetch(`/api/communities/${activeCommunityId}/posts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token },
+        body: JSON.stringify({
+          category: document.getElementById('postCategory').value,
+          content: document.getElementById('postContent').value,
+          image_url: document.getElementById('postImage').value
+        })
+      });
+      document.getElementById('postContent').value = '';
+      document.getElementById('postImage').value = '';
+      openCommunity(activeCommunityId);
+    }
+
+    async function likePost(postId) {
+      await fetch(`/api/posts/${postId}/like`, { method: 'POST', headers: { 'Authorization': token } });
+      openCommunity(activeCommunityId);
+    }
+
+    async function pinPost(postId) {
+      await fetch(`/api/posts/${postId}/pin`, { method: 'POST', headers: { 'Authorization': token } });
+      openCommunity(activeCommunityId);
+    }
+
+    async function deletePost(postId) {
+      await fetch(`/api/posts/${postId}`, { method: 'DELETE', headers: { 'Authorization': token } });
+      openCommunity(activeCommunityId);
+    }
+
+    async function addComment(postId) {
+      const content = document.getElementById(`comment-${postId}`).value;
+      if (!content) return;
+      await fetch(`/api/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token },
+        body: JSON.stringify({ content })
+      });
+      openCommunity(activeCommunityId);
+    }
+
+    async function reportPost(postId) {
+      const reason = prompt('Enter reason for reporting this post:');
+      if (!reason) return;
+      await fetch(`/api/posts/${postId}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token },
+        body: JSON.stringify({ reason })
+      });
+      alert('Post reported to Platform Admin.');
+    }
+
+    async function handleCreateEvent(e) {
+      e.preventDefault();
+      await fetch(`/api/communities/${activeCommunityId}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token },
+        body: JSON.stringify({
+          title: document.getElementById('evTitle').value,
+          event_date: document.getElementById('evDate').value,
+          location: document.getElementById('evLocation').value,
+          description: document.getElementById('evDesc').value
+        })
+      });
+      openCommunity(activeCommunityId);
+    }
+
+    async function rsvpEvent(eventId) {
+      await fetch(`/api/events/${eventId}/rsvp`, { method: 'POST', headers: { 'Authorization': token } });
+      openCommunity(activeCommunityId);
+    }
+
+    // PLATFORM ADMIN DASHBOARD
+    async function loadAdmin() {
+      showView('adminView');
+      const res = await fetch('/api/admin', { headers: { 'Authorization': token } });
+      const data = await res.json();
+
+      document.getElementById('kpiUsers').innerText = data.kpis.users;
+      document.getElementById('kpiComms').innerText = data.kpis.communities;
+      document.getElementById('kpiPosts').innerText = data.kpis.posts;
+      document.getElementById('kpiEvents').innerText = data.kpis.events;
+
+      document.getElementById('pendingCommsList').innerHTML = data.pendingCommunities.map(c => `
+        <div class="flex-between" style="padding:10px 0; border-bottom:1px solid var(--border);">
+          <div><strong>${c.name}</strong> (${c.city_village})<br><small>${c.description}</small></div>
+          <button class="small" onclick="approveCommunity(${c.id})">✓ Approve</button>
+        </div>
+      `).join('') || '<p>No pending community requests.</p>';
+
+      document.getElementById('reportsList').innerHTML = data.reports.map(r => `
+        <div class="flex-between" style="padding:10px 0; border-bottom:1px solid var(--border);">
+          <div>Post #${r.post_id} reported by <strong>${r.reporter_name}</strong>: "${r.reason}"</div>
+          <button class="small secondary" onclick="resolveReport(${r.id})">Mark Resolved</button>
+        </div>
+      `).join('') || '<p>No open abuse reports.</p>';
+    }
+
+    async function approveCommunity(id) {
+      await fetch(`/api/admin/communities/${id}/approve`, { method: 'POST', headers: { 'Authorization': token } });
+      loadAdmin();
+    }
+
+    async function resolveReport(id) {
+      await fetch(`/api/admin/reports/${id}/resolve`, { method: 'POST', headers: { 'Authorization': token } });
+      loadAdmin();
+    }
+  </script>
+</body>
+</html>
